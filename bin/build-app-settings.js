@@ -7,10 +7,59 @@ var plist   = require('plist');
 var libxml  = require('libxmljs');
 
 function ucfirst(s) {
-    return s.charAt(0).toUpperCase() + s.substring(1);
+	return s.charAt(0).toUpperCase() + s.substring(1);
 }
 
-function ConfigMap(config) {
+function SettingsGenerator () {
+
+	var config = {
+		ios: {
+			root: "PreferenceSpecifiers",
+		},
+		types: {
+			group: {
+				iosType: "PSGroupSpecifier",
+				androidType: "PreferenceCategory"
+			},
+			select: {
+				iosType: "PSMultiValueSpecifier",
+				androidType: "MultiSelectListPreference"
+			},
+			radio: {
+				iosType: "PSRadioGroupSpecifier",
+				androidType: "ListPreference"
+			},
+			toggle: {
+				iosType: "PSToggleSwitchSpecifier",
+				androidType: "SwitchPreference",
+				types: "boolean",
+			},
+			text: {
+				iosType: "PSTextFieldSpecifier",
+				androidType: "EditTextPreference",
+				types: "string",
+//				IsSecure
+//				KeyboardType (Alphabet , NumbersAndPunctuation , NumberPad , URL , EmailAddress)
+//				AutocapitalizationType
+//				AutocorrectionType
+			},
+			slider: {
+				iosType: "PSSliderSpecifier",
+				types: "float",
+				// NO TITLE
+//				DefaultValue
+//				MinimumValue
+//				MaximumValue
+			}
+
+		}
+
+	};
+
+	return
+}
+
+function configMap (config) {
 // iOS
 // https://developer.apple.com/library/ios/documentation/cocoa/Conceptual/UserDefaults/Preferences/Preferences.html
 /*
@@ -72,48 +121,49 @@ Titles
 
 */
 
-    if (config.type) {
-        
-        if (config.type == 'group') {
-            config.type = 'PSGroupSpecifier';
-        }
-        else {     
-            config.DefaultValue = config['default'];
-            delete config['default'];
+	if (config.type) {
 
-            config.Key = config.name;
-            delete config['name'];
+		if (config.type == 'group') {
+			config.type = 'PSGroupSpecifier';
+		}
+		else {
+			config.DefaultValue = config['default'];
+			delete config['default'];
 
-            switch (config.type) {
+			config.Key = config.name;
+			delete config['name'];
 
-                case 'textfield':
-                    config.type = 'PSTextFieldSpecifier';                
-                    break;
+			switch (config.type) {
 
-                case 'switch':
-                    config.type = 'PSToggleSwitchSpecifier';
-                    break;
+				case 'textfield':
+					config.type = 'PSTextFieldSpecifier';
+					break;
 
-                case 'combo':
-                    config.type = 'PSMultiValueSpecifier';
+				case 'switch':
+					config.type = 'PSToggleSwitchSpecifier';
+					break;
 
-                    config.titles = [];
-                    config.values = [];
-                    config.items.forEach(function(a) {
-                        config.values.push(a.id || a.value);
-                        config.titles.push(a.title || a.name);
-                    });
-                    delete config.items;
-                    break;
-            }
-        }
-    }
+				case 'combo':
+					config.type = 'PSMultiValueSpecifier';
+
+					config.titles = [];
+					config.values = [];
+					config.items.forEach(function(a) {
+						config.values.push(a.id || a.value);
+						config.titles.push(a.title || a.name);
+					});
+					delete config.items;
+					break;
+			}
+		}
+	}
 
 	Object.keys(config).forEach(function(k) {
 		var uc = ucfirst(k);
 		config[uc] = config[k];
-		if (uc != k)
+		if (uc !== k) {
 			delete config[k];
+		}
 	})
 
 	return config;
@@ -123,44 +173,44 @@ Titles
 
 fs.readFile('app-settings.json', function(err, data) {
 	if (err) {
+		console.error ('you must write your preferences meta in app-settings.json in order to work');
 		throw err;
-    }
-    
-	var iosData = JSON.parse(data);
-	var aData = iosData;
+	}
 
+	var iosData = JSON.parse (data);
+	var aData   = JSON.parse (data);
 
 	// build iOS settings bundle
 
 	var items = [];
 	while (iosData.length) {
 		var src = iosData.shift();
-		if (src.type == 'group') {
-			src.items.forEach(function(s) {
+		if (src.type === 'group') {
+			src.items.reverse().forEach(function(s) {
 				iosData.unshift(s);
 			});
-			delete src['items'];
+			delete src.items;
 		}
-		items.push(ConfigMap(src));
+		items.push (configMap(src));
 	}
 
 	var plistXml = plist.build({ PreferenceSpecifiers: items });
 	fs.exists('platforms/ios', function(exists) {
 		if (!exists) {
 			console.error('platform ios not found');
-            return;
-        }
-        
+			return;
+		}
+
 		fs.mkdir('platforms/ios/Settings.bundle', function(e) {
-			if (e && e.code != 'EEXIST') {
+			if (e && e.code !== 'EEXIST') {
 				throw e;
-            }
-            
+			}
+
 			// Write settings plist
 			fs.writeFile('platforms/ios/Settings.bundle/Root.plist', plistXml, function(err) {
 				if (err) {
 					throw err;
-                }
+				}
 				console.log('ios settings bundle was successfully generated');
 			});
 
@@ -168,11 +218,11 @@ fs.readFile('app-settings.json', function(err, data) {
 			fs.mkdir('platforms/ios/Settings.bundle/en.lproj', function(e) {
 				if (e && e.code != 'EEXIST') {
 					throw e;
-                }
+				}
 				fs.writeFile('platforms/ios/Settings.bundle/en.lproj/Root.strings', '/* */', function(err) {
 					if (err) {
 						throw err;
-                    }
+					}
 				});
 			});
 		});
@@ -198,7 +248,7 @@ fs.readFile('app-settings.json', function(err, data) {
 			config.items.forEach(function(item) {
 				addSettings(g, item);
 			});
-            
+
 		} else {
 
 			var attr = {
@@ -231,7 +281,46 @@ fs.readFile('app-settings.json', function(err, data) {
 					parent
 						.node('ListPreference')
 						.attr(attr)
-				break;
+					break;
+				case 'switch':
+					// Generate resource file
+
+					// TODO: title must be localizable
+					// attr['android:title'] = '@string/' + config.name;
+
+					// var d = new libxml.Document();
+					// var res = d.node('resources');
+					// var title = res.node('string').attr({name: config.name});
+
+					// strings.push({
+					//	name: config.name,
+					//	xml: d.toString()
+					// });
+
+					parent
+						.node('SwitchPreference')
+						.attr(attr)
+					break;
+				case 'textfield':
+					// Generate resource file
+
+					// TODO: title must be localizable
+					// attr['android:title'] = '@string/' + config.name;
+
+					// var d = new libxml.Document();
+					// var res = d.node('resources');
+					// var title = res.node('string').attr({name: config.name});
+
+					// strings.push({
+					//	name: config.name,
+					//	xml: d.toString()
+					// });
+
+					parent
+						.node('EditTextPreference')
+						.attr(attr)
+					break;
+
 			}
 		}
 	}
@@ -243,19 +332,19 @@ fs.readFile('app-settings.json', function(err, data) {
 	fs.exists('platforms/android', function(exists) {
 		if (!exists) {
 			console.error('platform android not found');
-            return;
-        }
+			return;
+		}
 
 		fs.mkdir('platforms/android/res/xml', function(e) {
-			if (e && e.code != 'EEXIST') {
+			if (e && e.code !== 'EEXIST') {
 				throw e;
-            }
+			}
 
 			// Write settings plist
 			fs.writeFile('platforms/android/res/xml/preference.xml', doc.toString(), function(err) {
 				if (err) {
 					throw err;
-                }
+				}
 				console.log('android preferences file was successfully generated');
 			});
 
@@ -263,12 +352,12 @@ fs.readFile('app-settings.json', function(err, data) {
 			fs.mkdir('platforms/android/res/values', function(e) {
 				if (e && e.code != 'EEXIST') {
 					throw e;
-                }
+				}
 				strings.forEach(function(file) {
 					fs.writeFile('platforms/android/res/values/' + file.name + '.xml', file.xml, function(err) {
 						if (err) {
 							throw err;
-                        }
+						}
 					});
 				});
 			});

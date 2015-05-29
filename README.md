@@ -9,15 +9,15 @@ Installing
 
 From plugin registry:
 
-    $ cordova plugin add me.apla.cordova.app-preferences
+	$ cordova plugin add me.apla.cordova.app-preferences
 
 From the repo:
 
-    $ cordova plugin add https://github.com/apla/me.apla.cordova.app-preferences
+	$ cordova plugin add https://github.com/apla/me.apla.cordova.app-preferences
 
 From a local clone:
 
-    $ cordova plugin add /path/to/me.apla.cordova.app-preferences/folder
+	$ cordova plugin add /path/to/me.apla.cordova.app-preferences/folder
 
 
 More information:
@@ -56,7 +56,7 @@ Platforms
 1. Native execution on Android using `android.content.SharedPreferences`
 1. Native execution on Windows Phone using `IsolatedStorageSettings.ApplicationSettings`
 1. Native execution on Windows 8 using `IsolatedStorageSettings.ApplicationSettings`
-1. (untested) fallback using `localStorage`
+1. Execution on BlackBerry10 fallback using `localStorage`
 
 Notes
 ---
@@ -68,12 +68,12 @@ Tests
 ---
 Tests are available in `src/test.js`. After installing plugin you can add test code from this file and then launch `testPlugin()` function.
 
-iOS, Android and Windows Phone 8 tests pass ok at the moment.
+iOS, Android, BlackBerry 10 and Windows Phone 8 tests pass ok at the moment.
 
 
 Preferences interface generator
 ---
-You can find preliminary version of `Settings.bundle` generator in `bin/build-app-settings.js`. 
+You can find preliminary version of `Settings.bundle` generator in `bin/build-app-settings.js`.
 
 #### Usage: ####
 
@@ -100,7 +100,10 @@ Supported controls for iOS:
 Supported controls for Android:
 * group
 * combo
+* switch - not tested
+* textfield - not tested
 
+TODO: Windows Phone ([guide](http://blogs.msdn.com/b/glengordon/archive/2012/09/17/managing-settings-in-windows-phone-and-windows-8-store-apps.aspx), [docs](https://msdn.microsoft.com/en-US/library/windows/apps/ff769510\(v=vs.105\).aspx))
 
 Credits
 ---
